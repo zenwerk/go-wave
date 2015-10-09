@@ -218,7 +218,32 @@ func (rd *Reader) ReadRawSample() ([]byte, error) {
 	return sample, err
 }
 
-func (rd *Reader) ReadSample() ([]int, error) {
+func (rd *Reader) ReadSample() ([]float64, error) {
+	raw, err := rd.ReadRawSample()
+	channel := int(rd.FmtChunk.Data.Channel)
+	ret := make([]float64, channel)
+	length := len(raw) / channel // 1チャンネルあたりのbyte数
+
+	if err != nil {
+		return ret, err
+	}
+
+	for i := 0; i < channel; i++ {
+		tmp := bytesToInt(raw[length*i : length*(i+1)])
+		switch rd.FmtChunk.Data.BitsPerSamples {
+		case 8:
+			ret[i] = float64(tmp-128) / 128.0
+		case 16:
+			ret[i] = float64(tmp) / 32768.0
+		}
+		if err != nil && err != io.EOF {
+			return ret, err
+		}
+	}
+	return ret, nil
+}
+
+func (rd *Reader) ReadSampleInt() ([]int, error) {
 	raw, err := rd.ReadRawSample()
 	channels := int(rd.FmtChunk.Data.Channel)
 	ret := make([]int, channels)
