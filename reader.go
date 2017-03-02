@@ -28,6 +28,9 @@ type Reader struct {
 	NumSamples        uint32
 	ReadSampleNum     uint32
 	SampleTime        int
+
+	// LIST chunk などの可変 chunk 長を管理する変数
+	extChunkSize int64
 }
 
 func NewReader(fileName string) (*Reader, error) {
@@ -60,6 +63,9 @@ func NewReader(fileName string) (*Reader, error) {
 		panic(err)
 	}
 	if err := reader.parseFmtChunk(); err != nil {
+		panic(err)
+	}
+	if err := reader.parseListChunk(); err != nil {
 		panic(err)
 	}
 	if err := reader.parseDataChunk(); err != nil {
@@ -163,8 +169,42 @@ func (rd *Reader) parseFmtChunk() error {
 	return nil
 }
 
+func (rd *Reader) parseListChunk() error {
+	rd.input.Seek(listChunkOffset, os.SEEK_SET)
+
+	// 'LIST' と書かれているかどうか
+	chunkID := make([]byte, 4)
+	if err := binary.Read(rd.input, binary.BigEndian, chunkID); err == io.EOF {
+		return fmt.Errorf("unexpected file end")
+	} else if err != nil {
+		return err
+	} else if string(chunkID[:]) != listChunkToken {
+		// LIST チャンクは無くても特に問題はない
+		return nil
+	}
+
+	// 'LIST' のサイズは可変、先頭の 1byte にサイズが記載されている
+	chunkSize := make([]byte, 1)
+	if err := binary.Read(rd.input, binary.LittleEndian, chunkSize); err == io.EOF {
+		return fmt.Errorf("unexpected file end")
+	} else if err != nil {
+		return err
+	}
+
+	// 可変な header 長管理変数更新
+	// rd.extChunkSize += int64(chunkSize[0]) + 4 + 4
+	rd.extChunkSize = int64(chunkSize[0]) + 4 + 4
+
+	return nil
+}
+
+// 可変長の header サイズも加味した riffChunkSizeOffset の値を返却する
+func (rd *Reader) getRiffChunkSizeOffset() int64 {
+	return riffChunkSizeBaseOffset + rd.extChunkSize
+}
+
 func (rd *Reader) parseDataChunk() error {
-	originOfDataChunk, _ := rd.input.Seek(riffChunkSizeOffset, os.SEEK_SET)
+	originOfDataChunk, _ := rd.input.Seek(rd.getRiffChunkSizeOffset(), os.SEEK_SET)
 
 	// 'data' と書かれているかどうか
 	chunkId := make([]byte, 4)
