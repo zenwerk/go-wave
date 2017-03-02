@@ -6,16 +6,18 @@ import (
 )
 
 const (
-	maxFileSize         = 2 << 31
-	riffChunkSize       = 12
-	riffChunkSizeOffset = 36 // RIFFChunk(12byte) + fmtChunk(24byte) = 36byte
-	fmtChunkSize        = 16
+	maxFileSize             = 2 << 31
+	riffChunkSize           = 12
+	listChunkOffset         = 36
+	riffChunkSizeBaseOffset = 36 // RIFFChunk(12byte) + fmtChunk(24byte) = 36byte
+	fmtChunkSize            = 16
 )
 
 var (
 	riffChunkToken = "RIFF"
 	waveFormatType = "WAVE"
 	fmtChunkToken  = "fmt "
+	listChunkToken = "LIST"
 	dataChunkToken = "data"
 )
 
