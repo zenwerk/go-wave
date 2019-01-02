@@ -71,7 +71,7 @@ func (w *Writer) WriteSample8(samples []uint8) (int, error) {
 	return n, err
 }
 
-func (w *Writer) WriteSample16(samples []uint16) (int, error) {
+func (w *Writer) WriteSample16(samples []int16) (int, error) {
 	buf := new(bytes.Buffer)
 
 	for i := 0; i < len(samples); i++ {
