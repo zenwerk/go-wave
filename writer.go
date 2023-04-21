@@ -8,10 +8,11 @@ import (
 )
 
 type WriterParam struct {
-	Out           io.WriteCloser
-	Channel       int
-	SampleRate    int
-	BitsPerSample int
+	Out            io.WriteCloser
+	WaveFormatType int
+	Channel        int
+	SampleRate     int
+	BitsPerSample  int
 }
 
 type Writer struct {
@@ -42,7 +43,7 @@ func NewWriter(param WriterParam) (*Writer, error) {
 		Size: uint32(fmtChunkSize),
 	}
 	w.fmtChunk.Data = &WavFmtChunkData{
-		WaveFormatType: uint16(1), // PCM
+		WaveFormatType: uint16(param.WaveFormatType),
 		Channel:        uint16(param.Channel),
 		SamplesPerSec:  uint32(param.SampleRate),
 		BytesPerSec:    samplesPerSec,
