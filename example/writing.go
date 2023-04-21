@@ -15,10 +15,11 @@ func main() {
 		panic(err)
 	}
 	param := wave.WriterParam{
-		Out:           f,
-		Channel:       1,
-		SampleRate:    44100,
-		BitsPerSample: 16,
+		Out:            f,
+		WaveFormatType: 1,
+		Channel:        1,
+		SampleRate:     44100,
+		BitsPerSample:  16,
 	}
 
 	w, err := wave.NewWriter(param)
